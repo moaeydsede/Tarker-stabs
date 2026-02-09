@@ -1,175 +1,0 @@
-<!doctype html>
-<html lang="ar" dir="rtl">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
-  <title>متابعة الأدوية</title>
-
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
-  <link rel="apple-touch-icon" href="icon-192.png" />
-  <link rel="stylesheet" href="styles.css" />
-</head>
-<body>
-  <header class="app-header">
-    <div class="brand">
-      <img class="brand__icon" src="icon-192.png" alt="Med" />
-      <div class="brand__txt">
-        <h1>متابعة الأدوية</h1>
-        <p class="muted">موبايل فقط • يعمل بدون إنترنت • بياناتك محفوظة على جهازك</p>
-      </div>
-    </div>
-    <div class="header-actions">
-      <button id="btnInstall" class="btn btn-ghost hidden" type="button">تثبيت</button>
-      <button id="btnNotify" class="btn btn-ghost" type="button">تفعيل التذكير</button>
-    </div>
-  </header>
-
-  <main class="container">
-    <section class="card">
-      <div class="card__head">
-        <h2>الأدوية اليوم</h2>
-        <div class="segmented" role="tablist" aria-label="فلترة">
-          <button class="segmented__btn is-active" data-filter="all" type="button">الكل</button>
-          <button class="segmented__btn" data-filter="due" type="button">مستحقة</button>
-          <button class="segmented__btn" data-filter="taken" type="button">تم تناولها</button>
-          <button class="segmented__btn" data-filter="missed" type="button">فاتت</button>
-        </div>
-      </div>
-
-      <div class="toolbar">
-        <div class="search">
-          <input id="searchInput" class="input" placeholder="ابحث باسم الدواء..." autocomplete="off" />
-        </div>
-        <button id="btnAdd" class="btn btn-primary" type="button">إضافة دواء</button>
-      </div>
-
-      <div id="todayList" class="list"></div>
-
-      <div id="emptyState" class="empty hidden">
-        <div class="empty__emoji">💊</div>
-        <div class="empty__title">لا توجد أدوية بعد</div>
-        <div class="empty__desc">اضغط “إضافة دواء” وابدأ تسجيل جدول أدويتك.</div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card__head">
-        <h2>أدوية الأزمة (عند اللزوم)</h2>
-        <p class="muted">هذه الأدوية تظهر دائمًا بزر “تناولت الآن” لتسجيلها بسرعة.</p>
-      </div>
-      <div id="prnList" class="list"></div>
-      <div id="prnEmpty" class="empty hidden">
-        <div class="empty__emoji">⚡</div>
-        <div class="empty__title">لا توجد أدوية أزمة</div>
-        <div class="empty__desc">أضف دواء وحدد “دواء أزمة/عند اللزوم”.</div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card__head">
-        <h2>سجل التناول</h2>
-        <div class="row">
-          <button id="btnExport" class="btn btn-ghost" type="button">تصدير CSV</button>
-          <button id="btnClearLog" class="btn btn-danger" type="button">مسح السجل</button>
-        </div>
-      </div>
-      <div id="logList" class="log"></div>
-      <div id="logEmpty" class="empty hidden">
-        <div class="empty__emoji">🗓️</div>
-        <div class="empty__title">السجل فارغ</div>
-        <div class="empty__desc">عند الضغط على “تناولت” سيتم تسجيل التوقيت هنا.</div>
-      </div>
-    </section>
-
-    <footer class="footer">
-      <div class="muted">
-        ملاحظة: التذكير عبر الإشعارات يعتمد على بقاء التطبيق مفتوحًا أو مثبتًا كـ PWA.
-        بعض الهواتف قد توقف الإشعارات في الخلفية لتوفير البطارية.
-      </div>
-    </footer>
-  </main>
-
-  <!-- Add/Edit Modal -->
-  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-    <div class="modal__backdrop" data-close="1"></div>
-    <div class="modal__panel">
-      <form id="medForm"  class="modal__content">
-      <div class="modal__head">
-        <h3 id="modalTitle">إضافة دواء</h3>
-        <button id="btnClose" class="btn btn-ghost" type="button">إغلاق</button>
-      </div>
-
-      <div class="grid">
-        <label class="field">
-          <span class="field__label">اسم الدواء *</span>
-          <input id="medName" class="input" required placeholder="مثال: Ventolin" />
-        </label>
-
-        <label class="field">
-          <span class="field__label">ملاحظة/جرعة</span>
-          <input id="medNote" class="input" placeholder="مثال: 2 بخة" />
-        </label>
-
-        <label class="field">
-          <span class="field__label">نوع الدواء</span>
-          <select id="medType" class="input">
-            <option value="scheduled">دواء بوقت ثابت</option>
-            <option value="prn">دواء أزمة/عند اللزوم</option>
-          </select>
-        </label>
-
-        <label class="field">
-          <span class="field__label">مواعيد اليوم (للدواء بوقت ثابت)</span>
-          <div class="times">
-            <div id="timesWrap"></div>
-            <button id="btnAddTime" class="btn btn-ghost" type="button">+ إضافة وقت</button>
-          </div>
-          <span class="hint">يمكن إضافة أكثر من وقت (مثال: 08:00 و 20:00)</span>
-        </label>
-
-        <label class="field">
-          <span class="field__label">صورة الدواء</span>
-          <input id="medImage" class="input" type="file" accept="image/*" />
-          <span class="hint">تُحفظ داخل الجهاز (LocalStorage) — قد تستهلك مساحة إذا كانت الصور كبيرة.</span>
-        </label>
-
-        
-        <label class="field">
-          <span class="field__label">تنبيه قبل الموعد</span>
-          <select id="medBefore" class="input">
-            <option value="0">بدون</option>
-            <option value="5">قبل 5 دقائق</option>
-            <option value="10" selected>قبل 10 دقائق</option>
-            <option value="15">قبل 15 دقيقة</option>
-            <option value="30">قبل 30 دقيقة</option>
-          </select>
-          <span class="hint">سيتم إرسال إشعار قبل الموعد المحدد (للأدوية بوقت ثابت).</span>
-        </label>
-
-        <label class="field">
-          <span class="field__label">تذكير في حال عدم تناوله</span>
-          <select id="medRemind" class="input">
-            <option value="15">كل 15 دقيقة</option>
-            <option value="30" selected>كل 30 دقيقة</option>
-            <option value="60">كل 60 دقيقة</option>
-            <option value="0">بدون تكرار</option>
-          </select>
-        </label>
-      </div>
-
-      <div class="modal__actions">
-        <button id="btnDelete" class="btn btn-danger hidden" type="button">حذف</button>
-        <div class="spacer"></div>
-        <button id="btnSave" class="btn btn-primary" type="submit">حفظ</button>
-      </div>
-
-      <input type="hidden" id="medId" />
-    </form>
-    </div>
-  </div>
-
-  <script src="app.js"></script>
-</body>
-</html>
