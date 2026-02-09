@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1, viewport-fit=cover" name="viewport"/>
+<meta content="#0b1220" name="theme-color"/>
+<title>متابعة الأدوية</title>
+<link href="manifest.json" rel="manifest"/>
+<link href="icon-192.png" rel="icon"/>
+<link href="icon-192.png" rel="apple-touch-icon"/>
+<link href="styles.css" rel="stylesheet"/>
+</head>
+<body>
+<header class="app-header">
+<div class="brand">
+<img alt="Med" class="brand__icon" src="icon-192.png"/>
+<div class="brand__txt">
+<h1>متابعة الأدوية</h1>
+<p class="muted">موبايل فقط • يعمل بدون إنترنت • بياناتك محفوظة على جهازك</p>
+</div>
+</div>
+<div class="header-actions">
+<button class="btn btn-ghost hidden" id="btnInstall" type="button">تثبيت</button>
+<button class="btn btn-ghost" id="btnNotify" type="button">تفعيل التذكير</button>
+</div>
+</header>
+<div class="error-banner hidden" id="errorBanner">
+<div class="error-banner__title">حدث خطأ في التطبيق</div>
+<div class="error-banner__msg" id="errorBannerMsg"></div>
+<button class="btn btn-ghost" id="btnReload" type="button">إعادة تحميل</button>
+</div>
+<main class="container"><div class="screen" id="screenToday">
+<section class="card">
+<div class="card__head">
+<h2>الأدوية اليوم</h2>
+<div aria-label="فلترة" class="segmented" role="tablist">
+<button class="segmented__btn is-active" data-filter="all" type="button">الكل</button>
+<button class="segmented__btn" data-filter="due" type="button">مستحقة</button>
+<button class="segmented__btn" data-filter="taken" type="button">تم تناولها</button>
+<button class="segmented__btn" data-filter="missed" type="button">فاتت</button>
+</div>
+</div>
+<div class="toolbar">
+<div class="search">
+<input autocomplete="off" class="input" id="searchInput" placeholder="ابحث باسم الدواء..."/>
+</div>
+<button class="btn btn-primary" id="btnGoMeds" type="button">إدارة الأدوية</button>
+</div>
+<div class="list" id="todayList"></div>
+<div class="empty hidden" id="emptyState">
+<div class="empty__emoji">💊</div>
+<div class="empty__title">لا توجد أدوية بعد</div>
+<div class="empty__desc">اضغط “إضافة دواء” وابدأ تسجيل جدول أدويتك.</div>
+</div>
+</section>
+<section class="card">
+<div class="card__head">
+<h2>أدوية الأزمة (عند اللزوم)</h2>
+<p class="muted">هذه الأدوية تظهر دائمًا بزر “تناولت الآن” لتسجيلها بسرعة.</p>
+</div>
+<div class="list" id="prnList"></div>
+<div class="empty hidden" id="prnEmpty">
+<div class="empty__emoji">⚡</div>
+<div class="empty__title">لا توجد أدوية أزمة</div>
+<div class="empty__desc">أضف دواء وحدد “دواء أزمة/عند اللزوم”.</div>
+</div>
+</section>
+<section class="card">
+<div class="card__head">
+<h2>سجل التناول</h2>
+<div class="row">
+<button class="btn btn-ghost" id="btnExport" type="button">تصدير CSV</button>
+<button class="btn btn-danger" id="btnClearLog" type="button">مسح السجل</button>
+</div>
+</div>
+<div class="log" id="logList"></div>
+<div class="empty hidden" id="logEmpty">
+<div class="empty__emoji">🗓️</div>
+<div class="empty__title">السجل فارغ</div>
+<div class="empty__desc">عند الضغط على “تناولت” سيتم تسجيل التوقيت هنا.</div>
+</div>
+</section>
+<footer class="footer">
+<div class="muted">
+        ملاحظة: التذكير عبر الإشعارات يعتمد على بقاء التطبيق مفتوحًا أو مثبتًا كـ PWA.
+        بعض الهواتف قد توقف الإشعارات في الخلفية لتوفير البطارية.
+      </div>
+</footer>
+</div><div class="screen hidden" id="screenMeds"><section class="card"><div class="card__head"><h2>الأدوية</h2><p class="muted">هنا كل أدويتك. الإضافة والتعديل والحذف تتم من هذه الشاشة فقط.</p></div><div class="toolbar"><div class="search"><input autocomplete="off" class="input" id="medsSearchInput" placeholder="ابحث باسم الدواء..."/></div><button class="btn btn-primary" id="btnAdd" type="button">إضافة دواء</button></div><div class="list" id="medsList"></div><div class="empty hidden" id="medsEmpty"><div class="empty__emoji">💊</div><div class="empty__title">لا توجد أدوية</div><div class="empty__desc">اضغط “إضافة دواء” لإضافة أول دواء.</div></div></section></div></main><nav class="bottom-nav"><button class="bottom-nav__btn is-active" id="navToday" type="button">اليوم</button><button class="bottom-nav__btn" id="navMeds" type="button">الأدوية</button></nav>
+<!-- Add/Edit Modal -->
+<div aria-labelledby="modalTitle" aria-modal="true" class="modal hidden" id="modal" role="dialog">
+<div class="modal__backdrop" data-close="1"></div>
+<div class="modal__panel">
+<form class="modal__content" id="medForm">
+<div class="modal__head">
+<h3 id="modalTitle">إضافة دواء</h3>
+<button class="btn btn-ghost" id="btnClose" type="button">إغلاق</button>
+</div>
+<div class="grid">
+<label class="field">
+<span class="field__label">اسم الدواء *</span>
+<input class="input" id="medName" placeholder="مثال: Ventolin" required=""/>
+</label>
+<label class="field">
+<span class="field__label">ملاحظة/جرعة</span>
+<input class="input" id="medNote" placeholder="مثال: 2 بخة"/>
+</label>
+<label class="field">
+<span class="field__label">نوع الدواء</span>
+<select class="input" id="medType">
+<option value="scheduled">دواء بوقت ثابت</option>
+<option value="prn">دواء أزمة/عند اللزوم</option>
+</select>
+</label>
+<div class="grid2">
+<label class="field">
+<span class="field__label">من تاريخ</span>
+<input class="input" id="medStart" type="date"/>
+</label>
+<label class="field">
+<span class="field__label">إلى تاريخ</span>
+<input class="input" id="medEnd" type="date"/>
+<span class="hint">اتركه فارغًا إذا كان الدواء مستمرًا.</span>
+</label>
+</div>
+<label class="field">
+<span class="field__label">مواعيد اليوم (للدواء بوقت ثابت)</span>
+<div class="times">
+<div id="timesWrap"></div>
+<button class="btn btn-ghost" id="btnAddTime" type="button">+ إضافة وقت</button>
+</div>
+<span class="hint">يمكن إضافة أكثر من وقت (مثال: 08:00 و 20:00)</span>
+</label>
+<label class="field">
+<span class="field__label">صورة الدواء</span>
+<input accept="image/*" class="input" id="medImage" type="file"/>
+<span class="hint">تُحفظ داخل الجهاز (LocalStorage) — قد تستهلك مساحة إذا كانت الصور كبيرة.</span>
+</label>
+<label class="field">
+<span class="field__label">تنبيه قبل الموعد</span>
+<select class="input" id="medBefore">
+<option value="0">بدون</option>
+<option value="5">قبل 5 دقائق</option>
+<option selected="" value="10">قبل 10 دقائق</option>
+<option value="15">قبل 15 دقيقة</option>
+<option value="30">قبل 30 دقيقة</option>
+</select>
+<span class="hint">سيتم إرسال إشعار قبل الموعد المحدد (للأدوية بوقت ثابت).</span>
+</label>
+<label class="field">
+<span class="field__label">تذكير في حال عدم تناوله</span>
+<select class="input" id="medRemind">
+<option value="15">كل 15 دقيقة</option>
+<option selected="" value="30">كل 30 دقيقة</option>
+<option value="60">كل 60 دقيقة</option>
+<option value="0">بدون تكرار</option>
+</select>
+</label>
+</div>
+<div class="modal__actions">
+<button class="btn btn-danger hidden" id="btnDelete" type="button">حذف</button>
+<div class="spacer"></div>
+<button class="btn btn-primary" id="btnSave" type="submit">حفظ</button>
+</div>
+<input id="medId" type="hidden"/>
+</form>
+</div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
